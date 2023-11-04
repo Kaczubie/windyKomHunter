@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  web:
+    env_file:
+      - .env
+      - .env-local
+    build:
+      context: ./.
+      dockerfile: Dockerfile
+    ports:
+      - "8032:8000"
+    command: python windy_kom_hunter/manage.py runserver 0.0.0.0:8000
+networks:
+  db_network:
+    driver: bridge
+  web_network:
+    driver: bridge
