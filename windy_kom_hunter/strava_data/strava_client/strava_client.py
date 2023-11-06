@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import requests
 from requests import Response
 
-from strava_data.strava_client.models.SegmentModel import SegmentModel
+from windy_kom_hunter.strava_data.strava_client.models.SegmentModel import SegmentModel
 from windy_kom_hunter.windy_kom_hunter import settings
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ class StravaClient:
         header = {'Authorization': f'Bearer {self.access_token}'}
 
         logger.info("Getting starred segments" )
+        starred_segments_response = None
         try:
             starred_segments_response = requests.get(url, headers=header)
             print(starred_segments_response.json())
@@ -46,4 +47,4 @@ class StravaClient:
         ]
 
 if __name__ == "__main__":
-    a = StravaClient(access_token=settings).get_starred_segments()
+    a = StravaClient(access_token=settings.ACCESS_TOKEN).get_starred_segments()

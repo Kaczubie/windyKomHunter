@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'strava_data.apps.StravaDataConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -126,3 +127,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STRAVA_API_BASE_URL = "https://www.strava.com/api/v3/"
 STARRED_SEGMENTS_URL = "segments/starred/"
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+
+STRAVA_CLIENT_ID = os.getenv("STRAVA_CLIENT_ID")
+STRAVA_CLIENT_SECRET = 'your_strava_client_secret'
+STRAVA_REDIRECT_URI = 'http://127.0.0.1:8032/strava_data/auth/strava/callback'  # Replace with your application's callback URL
