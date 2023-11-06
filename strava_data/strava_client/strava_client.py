@@ -46,4 +46,4 @@ class StravaClient:
         ]
 
 if __name__ == "__main__":
-    a = StravaClient(access_token=settings).get_starred_segments()
+    a = StravaClient(access_token=settings.ACCESS_TOKEN).get_starred_segments()
