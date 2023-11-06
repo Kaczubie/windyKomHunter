@@ -9,6 +9,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8032:8000"
+    volumes:
+      - ./:/project:delegated
     command: python windy_kom_hunter/manage.py runserver 0.0.0.0:8000
 networks:
   db_network:
