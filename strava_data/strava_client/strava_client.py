@@ -5,7 +5,8 @@ import requests
 from requests import Response
 
 from strava_data.strava_client.models.SegmentModel import SegmentModel
-from windy_kom_hunter.windy_kom_hunter import settings
+from windy_kom_hunter import settings
+
 logger = logging.getLogger(__name__)
 
 class StravaAPIFetchError(Exception):
