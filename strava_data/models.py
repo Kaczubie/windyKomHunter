@@ -3,6 +3,7 @@ from typing import Any
 
 from django.db import models
 from django.contrib.auth.models import User
+
 # Create your models here.
 from django.utils import timezone
 
@@ -19,12 +20,11 @@ class StravaAuthorization(models.Model):
 
     def has_valid_access_token(self) -> bool:
         return (
-                self.access_token
-                and not self.is_token_expired()
-                and self.has_valid_scope()
+            self.access_token and not self.is_token_expired() and self.has_valid_scope()
         )
+
     def is_token_expired(self) -> bool:
-        return self.expires_at <= timezone.now()
+        return self.expires_at <= timezone.now() if self.expires_at else True
 
     def has_valid_scope(self):
         """Return true if the scope is valid."""
@@ -47,11 +47,12 @@ class StravaAuthorization(models.Model):
         """Update the token with the response from strava."""
         self.access_token = token_response.access_token
         self.refresh_token = token_response.refresh_token
-        self.access_token_expires_at = token_response.expires_at_datetime
+        self.expires_at = token_response.expires_at_datetime
         self.save()
 
     def __str__(self) -> str:
         return (
             f"{self.user.username.capitalize()} "
             f"{'has' if self.has_valid_access_token() else 'does not have'} "
-            f"valid access token" )
+            f"valid access token"
+        )

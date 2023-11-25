@@ -7,18 +7,26 @@ from strava_data.schemas import StravaTokenResponse
 from windy_kom_hunter import settings
 
 logger = logging.getLogger(__name__)
-
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
 
 ACCESS_TOKEN_URL = "https://www.strava.com/oauth/token"
 STRAVA_AUTH_URL = "https://www.strava.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope=read,activity:read_all"
-STRAVA_REDIRECT_URI= 'http://{http_host}/strava_data/auth/strava/callback/'
+STRAVA_REDIRECT_URI = "http://{http_host}/strava_data/auth/strava/save_strava_auth/"
 
-def get_authorization_url(http_host:str)->str:
 
-    return STRAVA_AUTH_URL.format(client_id=settings.STRAVA_CLIENT_ID, redirect_uri=STRAVA_REDIRECT_URI.format(http_host=http_host))
+def get_authorization_url(http_host: str) -> str:
+
+    return STRAVA_AUTH_URL.format(
+        client_id=settings.STRAVA_CLIENT_ID,
+        redirect_uri=STRAVA_REDIRECT_URI.format(http_host=http_host),
+    )
+
+
 def request_access_token(strava_auth: StravaAuthorization):
     """Requests an access token for a user."""
     _access_token_update(strava_auth, refresh=False)
+
 
 def _access_token_update(strava_auth: StravaAuthorization, refresh=False):
     """Updates the access token for a user. This can either be an initial request or
@@ -33,6 +41,7 @@ def _access_token_update(strava_auth: StravaAuthorization, refresh=False):
         return
 
     strava_token_response = StravaTokenResponse(**response.json())
+    logger.info(f"StravaTokenReponse: {strava_token_response}")
     strava_auth.update_token(strava_token_response)
 
 
@@ -43,7 +52,7 @@ def _get_token_payload(strava_auth: StravaAuthorization, refresh=False):
 
     payload = {
         "client_id": settings.STRAVA_CLIENT_ID,
-        "client_secret": settings.STRAVA_CLIENT_SECRET
+        "client_secret": settings.STRAVA_CLIENT_SECRET,
     }
 
     if refresh:
@@ -54,3 +63,18 @@ def _get_token_payload(strava_auth: StravaAuthorization, refresh=False):
         payload["grant_type"] = "authorization_code"
 
     return payload
+
+
+def save_auth(request):
+    if "code" not in request.GET:
+        logger.error("No code in request")
+        return
+    code = request.GET.get("code")
+    scope = request.GET["scope"].split(",") if "scope" in request.GET else []
+
+    StravaAuthorization.objects.filter(user=request.user).delete()
+
+    strava_auth = StravaAuthorization.create_with_scope(
+        user=request.user, code=code, scope_list=scope,
+    )
+    request_access_token(strava_auth)

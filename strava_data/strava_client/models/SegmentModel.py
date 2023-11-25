@@ -9,6 +9,3 @@ class SegmentModel(BaseModel):
     end_latlng: list[float]
     city: str | None = None
     pr_time: int | None = None
-
-
-

@@ -2,6 +2,8 @@ from datetime import datetime
 
 from django.utils import timezone
 from pydantic import BaseModel, Field
+
+
 class StravaAthleteData(BaseModel):
     """Class to parse strava user data."""
 
@@ -19,6 +21,7 @@ class StravaAthleteData(BaseModel):
     weight: float | None = Field(default=None)
     profile_medium: str | None = Field(default=None)
     profile: str | None = Field(default=None)
+
 
 class StravaTokenResponse(BaseModel):
     """Class to parse strava token responses."""

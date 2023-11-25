@@ -5,13 +5,19 @@ from django.shortcuts import render
 
 
 from django.shortcuts import redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.urls import reverse_lazy
 
-from .authorization import get_authorization_url, STRAVA_AUTH_URL, request_access_token
+from .authorization import (
+    get_authorization_url,
+    STRAVA_AUTH_URL,
+    request_access_token,
+    save_auth,
+)
 from .models import StravaAuthorization
 
 logger = logging.getLogger(__name__)
+
 
 @login_required(login_url=reverse_lazy("login"))
 def strava_authorize(request):
@@ -32,20 +38,14 @@ def strava_authorize(request):
     return render(request, "strava_auth.html", context=context)
 
 
-def strava_callback(request):
-    if "code" not in request.GET:
-        logger.error("No code in request")
-        return
-    code = request.GET.get("code")
-    scope = request.GET["scope"].split(",") if "scope" in request.GET else []
-
-    StravaAuthorization.objects.filter(user=request.user).delete()
-
-    strava_auth = StravaAuthorization.create_with_scope(
-        user=request.user,
-        code=code,
-        scope_list=scope,
-    )
-    request_access_token(strava_auth)
-    return HttpResponse("Strava authorization successful!")
-
+@login_required(login_url=reverse_lazy("login"))
+def save_strava_auth(request):
+    if request.method == "GET" and "code" in request.GET:
+        save_auth(request)
+        return HttpResponse("Strava authorization successful!")
+    elif request.method == "GET" and "error" in request.GET:
+        if request.GET["error"] == "access_denied":
+            logger.warning("User denied access")
+            HttpResponse("User denied access")
+    else:
+        return Http404("Not found")
