@@ -12,12 +12,22 @@ from .authorization import (
     get_authorization_url,
     STRAVA_AUTH_URL,
     request_access_token,
-    save_auth,
+    save_auth, get_authentication,
 )
 from .models import StravaAuthorization
 
 logger = logging.getLogger(__name__)
 
+
+
+@login_required(login_url=reverse_lazy("login"))
+def index(request):
+    strava_auth = get_authentication(request.user)
+    if strava_auth:
+        return HttpResponse("Already authorized")
+
+    else:
+        return redirect("strava-authorize")
 
 @login_required(login_url=reverse_lazy("login"))
 def strava_authorize(request):

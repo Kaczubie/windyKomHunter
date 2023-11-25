@@ -1,6 +1,8 @@
+import enum
 import logging
 
 import requests
+from django.contrib.auth.models import User
 
 from strava_data.models import StravaAuthorization
 from strava_data.schemas import StravaTokenResponse
@@ -15,6 +17,32 @@ STRAVA_AUTH_URL = "https://www.strava.com/oauth/authorize?client_id={client_id}&
 STRAVA_REDIRECT_URI = "http://{http_host}/strava_data/auth/strava/save_strava_auth/"
 
 
+
+
+
+def get_authentication(user: User):
+    """Returns the strava authentication for a user if it exists and is valid.
+    If token is expired, it will try to refresh it."""
+    try:
+        strava_auth = StravaAuthorization.objects.get(user=user)
+    except StravaAuthorization.DoesNotExist:
+        return None
+
+    if strava_auth.has_valid_access_token():
+        logger.debug(f"User {user} has valid token")
+        return strava_auth
+
+    if strava_auth.is_token_expired:
+        logger.debug(f"User {user} has expired token. Will try to refresh.")
+        refresh_token(strava_auth)
+        if strava_auth.has_valid_access_token():
+            logger.debug("Token refreshed")
+            return strava_auth
+        else:
+            logger.debug("Token couldn't be refreshed")
+
+    return None
+
 def get_authorization_url(http_host: str) -> str:
 
     return STRAVA_AUTH_URL.format(
@@ -27,6 +55,9 @@ def request_access_token(strava_auth: StravaAuthorization):
     """Requests an access token for a user."""
     _access_token_update(strava_auth, refresh=False)
 
+def refresh_token(strava_auth: StravaAuthorization):
+    """Refreshes the access token for a user."""
+    _access_token_update(strava_auth, refresh=True)
 
 def _access_token_update(strava_auth: StravaAuthorization, refresh=False):
     """Updates the access token for a user. This can either be an initial request or
